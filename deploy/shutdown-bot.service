@@ -1,0 +1,24 @@
+[Unit]
+Description=Bot de Telegram para controle de energia da maquina
+Documentation=file:///opt/shutdown-bot/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Token e allowlist ficam fora do projeto, em um arquivo root:root 0600.
+EnvironmentFile=/etc/shutdown-bot.env
+WorkingDirectory=/opt/shutdown-bot
+Environment=PYTHONPATH=/opt/shutdown-bot/src
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/shutdown-bot/.venv/bin/python -m shutdown_bot
+Restart=always
+RestartSec=5
+PrivateTmp=yes
+
+# O hardening para por aqui de propósito: o servico precisa falar com o systemd
+# e com o logind via D-Bus, e opcoes como ProtectSystem=strict quebram
+# exatamente aquilo que o bot existe para fazer.
+
+[Install]
+WantedBy=multi-user.target

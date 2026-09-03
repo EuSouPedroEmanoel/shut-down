@@ -1,0 +1,7 @@
+# Segredos: o token dá poder de desligar a máquina — nunca versionar.
+.env
+
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
