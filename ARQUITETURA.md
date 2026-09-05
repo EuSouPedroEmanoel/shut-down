@@ -7,7 +7,7 @@ Bot de Telegram que controla a energia da máquina onde ele roda. Versão 1.1.0.
 | Arquivo | O que faz | Quem chama |
 |---|---|---|
 | [`run.sh`](run.sh) | Modo desenvolvimento: garante a `.venv`, exige o `.env` e sobe o bot com `PYTHONPATH=src` | Você, no terminal |
-| [`deploy/install.sh`](deploy/install.sh) | Copia o projeto para `/opt/shutdown-bot`, pergunta token e IDs, grava `/etc/shutdown-bot.env` com permissão `600` e liga o serviço | Você, uma vez só |
+| [`deploy/install.sh`](deploy/install.sh) | Copia o projeto para `/opt/shutdown-bot`, pergunta token e IDs, grava `/etc/shutdown-bot.env` com permissão `600` e **reinicia** o serviço | Você, na instalação e a cada atualização |
 | [`deploy/shutdown-bot.service`](deploy/shutdown-bot.service) | Unit do systemd que sobe o bot como root junto com a máquina, antes de qualquer login | systemd, no boot |
 | [`src/shutdown_bot/__main__.py`](src/shutdown_bot/__main__.py) | Configura o log, carrega a config, decide entre modo normal e bootstrap e inicia o polling | `python -m shutdown_bot` |
 | [`src/shutdown_bot/config.py`](src/shutdown_bot/config.py) | Lê o ambiente (com o `.env` como reserva) e valida token e lista de autorizados; a regra de quem pode usar o bot mora aqui | `__main__.py` na partida, e o decorator `restrito` a cada mensagem |

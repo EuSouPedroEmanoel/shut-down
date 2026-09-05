@@ -55,7 +55,11 @@ fi
 echo "==> Instalando o servico"
 install -m 644 "$SRC/deploy/shutdown-bot.service" "$UNIT"
 systemctl daemon-reload
-systemctl enable --now shutdown-bot.service
+systemctl enable shutdown-bot.service
+# restart, e nao "enable --now": com o servico ja rodando, o --now nao faz nada
+# e o processo continuaria com o codigo antigo carregado na memoria. Como este
+# script tambem serve para atualizar, ele precisa recarregar o codigo sempre.
+systemctl restart shutdown-bot.service
 sleep 2
 systemctl --no-pager --lines=0 status shutdown-bot.service || true
 
