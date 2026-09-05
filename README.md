@@ -2,14 +2,20 @@
 
 Desligue, reinicie, suspenda ou bloqueie o seu computador **enviando uma mensagem no Telegram** — de qualquer lugar, do celular, sem precisar estar na frente da máquina.
 
+O chat tem **uma mensagem só** — um painel de botões que o bot atualiza no lugar. Nada de histórico de comandos se acumulando:
+
 ```
-Você:  /desligar 60
-Bot:   Confirma desligar em 60s?   [ ✅ Desligar ]  [ ✖️ Cancelar ]
-Você:  (toca em ✅ Desligar)
-Bot:   ⏳ Desligando em 60s. Envie /cancelar para abortar.
+🤖 Controle de energia
+🕗 atualizado 14:32:07
+
+[ 🔴 Desligar  ] [ 🔄 Reiniciar ]
+[ 😴 Suspender ] [ 🔒 Bloquear  ]
+[        📊 Status           ]
 ```
 
-Mudou de ideia? `/cancelar` e nada acontece.
+Toca em `🔴 Desligar` e **essa mesma mensagem** vira a pergunta — `⚡ Agora`, `⏱ 1 min`, `⏱ 5 min`, `⏱ 30 min` ou `✖️ Voltar`. Escolheu, ela vira a contagem com um botão de cancelar.
+
+Mudou de ideia? Toque em cancelar (ou envie `/cancelar`) e nada acontece.
 
 ---
 
@@ -46,6 +52,7 @@ Três características que valem saber de antemão:
 - **Só você consegue usar.** Uma lista de IDs autorizados barra todo mundo. Nem quem descobrir o nome do seu bot consegue nada.
 - **Toda ação destrutiva pede confirmação** num botão, e o atraso configurável dá tempo de você se arrepender.
 - **Nenhuma porta é aberta no seu computador.** O bot faz conexões *de saída* para o Telegram. Não há nada escutando, nada exposto à internet.
+- **O chat não acumula.** As suas mensagens são apagadas depois de processadas e o bot edita sempre o mesmo painel, em vez de responder com mensagem nova.
 
 > **O que ele não faz:** ligar a máquina de volta. Computador desligado não recebe mensagem. Para isso você precisaria de Wake-on-LAN, que é outro projeto.
 
@@ -226,7 +233,7 @@ O terminal deve mostrar `autorizados: [1234567890]` e `bot iniciado, aguardando 
 
 | Envie | O que deve acontecer |
 |---|---|
-| `/start` | Aparece o menu com todos os comandos |
+| `/start` | Aparece o painel de botões — e a sua mensagem some sozinha |
 | `/status` | Uptime, CPU, RAM e disco da máquina |
 | `/bloquear` | ⚠️ **A tela trava de verdade** — tenha a sua senha em mãos |
 
@@ -304,18 +311,25 @@ Quando a máquina voltar e aparecer a tela de login, **não faça login**. Pegue
 
 ## Comandos
 
+O dia a dia é pelo painel. Os comandos de texto continuam valendo para o que o painel não oferece — principalmente um atraso fora dos quatro botões — e **a mensagem que você envia é apagada** logo depois de processada.
+
 | Comando | O que faz |
 |---|---|
+| `/start` | Abre (ou traz de volta) o painel |
 | `/status` | Uptime, CPU, RAM, disco (e bateria, em notebooks) |
-| `/desligar [segundos]` | Desliga. Sem número, usa 10 segundos |
+| `/desligar [segundos]` | Desliga. Sem número, o painel pergunta quando |
 | `/reiniciar [segundos]` | Reinicia |
 | `/cancelar` | Aborta a ação agendada |
 | `/suspender` | Suspende para a RAM (dorme) |
 | `/bloquear` | Bloqueia a tela |
 | `/meuid` | Mostra o seu ID do Telegram |
-| `/ajuda` | Mostra o menu |
+| `/ajuda` | Lista os comandos dentro do painel |
 
-`/desligar` e `/reiniciar` **sempre** pedem confirmação. O atraso aceita de 0 segundos até 24 horas.
+Desligar, reiniciar **e suspender** sempre pedem confirmação. Suspender está nessa lista porque é o único erro que o bot não consegue desfazer: máquina dormindo não recebe mais comando nenhum. Bloquear vai direto, porque você desfaz na própria máquina.
+
+O atraso aceita de 0 segundos até 24 horas: `/desligar 3600` desliga daqui a uma hora.
+
+> **Onde foi parar o histórico.** Como o chat é limpo, ele deixa de ser o registro do que você pediu. Esse registro passa a ser o log do serviço: `journalctl -u shutdown-bot -n 50`.
 
 ---
 
@@ -480,7 +494,7 @@ python3 -m venv .venv
 .venv/bin/python -m pytest -q
 ```
 
-**46 testes**, todos sem rede e sem tocar na máquina de verdade.
+**60 testes**, todos sem rede e sem tocar na máquina de verdade.
 
 ### Estrutura
 
@@ -489,8 +503,11 @@ python3 -m venv .venv
 | [`config.py`](src/shutdown_bot/config.py) | Lê e valida o ambiente; a regra da lista de autorizados mora aqui |
 | [`power.py`](src/shutdown_bot/power.py) | Chamadas ao `systemctl` e ao `loginctl` |
 | [`status.py`](src/shutdown_bot/status.py) | Relatório do `/status` |
-| [`bot.py`](src/shutdown_bot/bot.py) | Comandos, confirmação e agendamento |
+| [`ui.py`](src/shutdown_bot/ui.py) | Monta os textos e teclados de cada tela do painel |
+| [`bot.py`](src/shutdown_bot/bot.py) | Comandos, painel, confirmação e agendamento |
 | [`deploy/`](deploy/) | Serviço systemd e instalador |
+
+O passo a passo de como as peças se conectam está em [`ARQUITETURA.md`](ARQUITETURA.md).
 
 ### Um detalhe que o código protege de propósito
 
