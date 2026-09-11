@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
 import subprocess
 import sys
 
@@ -81,7 +83,11 @@ def main(argv: list[str] | None = None) -> int:
             return 0
     if args.command == "config":
         try:
-            return subprocess.call(["sudoedit", "/etc/shutdown-bot.env"])
+            env = os.environ.copy()
+            editor = shutil.which("vi") or shutil.which("nano")
+            if editor is not None:
+                env["SUDO_EDITOR"] = editor
+            return subprocess.call(["sudoedit", "/etc/shutdown-bot.env"], env=env)
         except KeyboardInterrupt:
             print("\nEdição interrompida.")
             return 130

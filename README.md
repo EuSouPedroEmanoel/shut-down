@@ -494,7 +494,20 @@ E, no Telegram, envie `/deletebot` ao BotFather para apagar o bot de vez.
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
-.venv/bin/python -m pytest -q
+    .venv/bin/python -m pytest -q
+
+### Instalação rápida
+
+Para baixar a versão da branch `main` e iniciar o instalador:
+
+    curl -fsSL https://raw.githubusercontent.com/Daniel-Carrapeiro-Mendes/shut-down/main/install.sh | bash
+
+O script baixa uma cópia temporária do projeto e executa o instalador com `sudo`.
+Para revisar o script antes de executar, baixe-o primeiro:
+
+    curl -fsSL https://raw.githubusercontent.com/Daniel-Carrapeiro-Mendes/shut-down/main/install.sh -o install.sh
+    less install.sh
+    bash install.sh
 ```
 
 **60 testes**, todos sem rede e sem tocar na máquina de verdade.
