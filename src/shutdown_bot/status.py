@@ -7,6 +7,10 @@ import time
 
 import psutil
 
+PING_HOST = "api.telegram.org"
+PING_PORT = 443
+PING_TIMEOUT_SECONDS = 2
+
 
 def format_duration(seconds: float) -> str:
     """Formata uma duração em ``2d 3h 14m`` — omitindo as unidades zeradas."""
@@ -33,11 +37,23 @@ def format_bytes(value: float) -> str:
     return f"{value:.1f} TiB"  # inalcançável, mantém o type checker feliz
 
 
+def ping() -> str:
+    """Mede a latência TCP até a API do Telegram, sem enviar dados."""
+    inicio = time.perf_counter()
+    try:
+        with socket.create_connection((PING_HOST, PING_PORT), timeout=PING_TIMEOUT_SECONDS):
+            pass
+    except OSError:
+        return "indisponível"
+    return f"{(time.perf_counter() - inicio) * 1000:.0f} ms"
+
+
 def collect() -> str:
     """Monta o relatório de status. Linhas indisponíveis são simplesmente omitidas."""
     uptime = time.time() - psutil.boot_time()
     memory = psutil.virtual_memory()
     disk = psutil.disk_usage("/")
+    swap = psutil.swap_memory()
 
     lines = [
         f"🖥 <b>{socket.gethostname()}</b>",
@@ -45,6 +61,8 @@ def collect() -> str:
         f"⚙️ CPU: {psutil.cpu_percent(interval=0.5):.0f}%",
         f"🧠 RAM: {format_bytes(memory.used)} / {format_bytes(memory.total)}"
         f" ({memory.percent:.0f}%)",
+        f"🔁 Swap: {format_bytes(swap.used)} / {format_bytes(swap.total)}"
+        f" ({swap.percent:.0f}%)",
         f"💾 Disco /: {format_bytes(disk.used)} / {format_bytes(disk.total)}"
         f" ({disk.percent:.0f}%)",
     ]
@@ -54,5 +72,7 @@ def collect() -> str:
     if battery is not None:
         plug = "🔌 na tomada" if battery.power_plugged else "🔋 na bateria"
         lines.append(f"{plug} — {battery.percent:.0f}%")
+
+    lines.append(f"📡 Ping Telegram: {ping()}")
 
     return "\n".join(lines)

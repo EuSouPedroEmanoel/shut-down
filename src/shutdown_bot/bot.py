@@ -133,6 +133,12 @@ def _parse_delay(args: list[str]) -> int:
     return delay
 
 
+def _tempo_resposta(inicio: float) -> str:
+    """Formata o tempo de processamento de uma interação do Telegram."""
+    segundos = time.perf_counter() - inicio
+    return f"⏱ Tempo de processamento: {segundos:.2f}s"
+
+
 # --------------------------------------------------------------------------- #
 # O painel
 # --------------------------------------------------------------------------- #
@@ -472,6 +478,7 @@ async def _executar_imediata(
     context: ContextTypes.DEFAULT_TYPE, chat_id: int, user_id: int, acao: str
 ) -> None:
     """Suspender e bloquear: acontecem agora, sem passar pela fila de jobs."""
+    inicio = time.perf_counter()
     executar = IMEDIATAS.get(acao)
     if executar is None:
         await _painel(context, chat_id, user_id, "⚠️ Ação desconhecida.")
@@ -482,7 +489,12 @@ async def _executar_imediata(
         # estar atualizado ANTES: uma edição não entregue deixaria a tela
         # mentindo sobre o estado da máquina.
         log.info("suspendendo a pedido de id=%s", user_id)
-        await _painel(context, chat_id, user_id, "😴 Suspendendo...")
+        await _painel(
+            context,
+            chat_id,
+            user_id,
+            f"😴 Suspendendo...\n{_tempo_resposta(inicio)}",
+        )
         try:
             await asyncio.to_thread(executar)
         except power.PowerActionError as exc:
@@ -498,7 +510,10 @@ async def _executar_imediata(
         return
     log.info("tela bloqueada a pedido de id=%s", user_id)
     await _painel(
-        context, chat_id, user_id, f"🔒 Tela bloqueada · {time.strftime('%H:%M')}"
+        context,
+        chat_id,
+        user_id,
+        f"🔒 Tela bloqueada · {time.strftime('%H:%M')}\n{_tempo_resposta(inicio)}",
     )
 
 
@@ -510,16 +525,27 @@ async def _executar_acao(context: ContextTypes.DEFAULT_TYPE) -> None:
     da chamada — nunca depois, ou ele nunca chega.
     """
     job = context.job
+    inicio = time.perf_counter()
     acao = job.data["acao"]
     user_id = job.data.get("user_id", 0)
     _, gerundio, executar = ACOES[acao]
 
-    await _painel(context, job.chat_id, user_id, f"⚡ {gerundio} agora...")
+    await _painel(
+        context,
+        job.chat_id,
+        user_id,
+        f"⚡ {gerundio} agora...\n{_tempo_resposta(inicio)}",
+    )
     try:
         await asyncio.to_thread(executar)
     except power.PowerActionError as exc:
         log.error("falha na ação %s: %s", acao, exc)
-        await _painel(context, job.chat_id, user_id, f"❌ {html.escape(str(exc))}")
+        await _painel(
+            context,
+            job.chat_id,
+            user_id,
+            f"❌ {html.escape(str(exc))}\n{_tempo_resposta(inicio)}",
+        )
 
 
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
