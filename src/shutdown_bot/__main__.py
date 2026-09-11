@@ -18,6 +18,8 @@ def main() -> int:
     )
     # A httpx loga cada requisição de polling; em INFO isso enterra o resto.
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    # O scheduler já tem logs próprios, mas o bot registra jobs com nome e ação.
+    logging.getLogger("apscheduler.scheduler").setLevel(logging.WARNING)
 
     bootstrap = is_bootstrap()
     try:

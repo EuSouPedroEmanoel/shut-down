@@ -9,7 +9,10 @@ sessão gráfica local está ativa.
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
+
+from . import executor_client
 
 log = logging.getLogger(__name__)
 
@@ -27,6 +30,19 @@ class PowerActionError(RuntimeError):
 
 def run_action(command: list[str]) -> None:
     """Executa uma ação de energia, traduzindo falhas em ``PowerActionError``."""
+    if os.path.exists(executor_client.SOCKET_PATH):
+        action = {
+            tuple(POWEROFF): "poweroff",
+            tuple(REBOOT): "reboot",
+            tuple(SUSPEND): "suspend",
+            tuple(LOCK): "lock",
+        }.get(tuple(command))
+        if action is not None:
+            try:
+                executor_client.execute(action)
+                return
+            except executor_client.ExecutorError as exc:
+                raise PowerActionError(str(exc)) from exc
     log.info("executando ação de energia: %s", " ".join(command))
     try:
         subprocess.run(

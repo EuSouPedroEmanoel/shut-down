@@ -476,7 +476,10 @@ O git continua funcionando normalmente: o endereço do repositório remoto não 
 
 ```bash
 sudo systemctl disable --now shutdown-bot
+sudo systemctl disable --now shutdown-executor
 sudo rm /etc/systemd/system/shutdown-bot.service
+sudo rm /etc/systemd/system/shutdown-executor.service
+sudo rm /usr/local/bin/shutdown-bot
 sudo rm /etc/shutdown-bot.env
 sudo rm -rf /opt/shutdown-bot
 sudo systemctl daemon-reload

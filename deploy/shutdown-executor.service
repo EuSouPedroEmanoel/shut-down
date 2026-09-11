@@ -1,0 +1,16 @@
+[Unit]
+Description=Executor privilegiado do shutdown-bot
+After=local-fs.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/shutdown-bot
+Environment=PYTHONPATH=/opt/shutdown-bot/src
+ExecStart=/opt/shutdown-bot/.venv/bin/python -m shutdown_bot.executor
+Restart=always
+RestartSec=5
+RuntimeDirectory=shutdown-bot
+RuntimeDirectoryMode=0750
+
+[Install]
+WantedBy=multi-user.target

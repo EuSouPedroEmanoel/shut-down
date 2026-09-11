@@ -8,6 +8,7 @@ set -euo pipefail
 DEST=/opt/shutdown-bot
 ENV_FILE=/etc/shutdown-bot.env
 UNIT=/etc/systemd/system/shutdown-bot.service
+EXECUTOR_UNIT=/etc/systemd/system/shutdown-executor.service
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
 
 if [[ $EUID -ne 0 ]]; then
@@ -54,7 +55,22 @@ fi
 
 echo "==> Instalando o servico"
 install -m 644 "$SRC/deploy/shutdown-bot.service" "$UNIT"
+install -m 644 "$SRC/deploy/shutdown-executor.service" "$EXECUTOR_UNIT"
+install -m 755 "$DEST/bin/shutdown-bot" /usr/local/bin/shutdown-bot
+if command -v fish >/dev/null 2>&1; then
+    install -Dm 644 "$DEST/completions/shutdown-bot.fish" \
+        /usr/share/fish/vendor_completions.d/shutdown-bot.fish
+fi
+if command -v bash >/dev/null 2>&1; then
+    install -Dm 644 "$DEST/completions/shutdown-bot.bash" \
+        /usr/share/bash-completion/completions/shutdown-bot
+fi
+if command -v zsh >/dev/null 2>&1; then
+    install -Dm 644 "$DEST/completions/_shutdown-bot" \
+        /usr/share/zsh/site-functions/_shutdown-bot
+fi
 systemctl daemon-reload
+systemctl enable --now shutdown-executor.service
 systemctl enable shutdown-bot.service
 # restart, e nao "enable --now": com o servico ja rodando, o --now nao faz nada
 # e o processo continuaria com o codigo antigo carregado na memoria. Como este
@@ -66,7 +82,8 @@ systemctl --no-pager --lines=0 status shutdown-bot.service || true
 cat <<'EOF'
 
 Pronto. Comandos uteis:
-  journalctl -u shutdown-bot -f      # acompanhar os logs
-  systemctl restart shutdown-bot     # reiniciar apos editar a configuracao
-  sudoedit /etc/shutdown-bot.env     # trocar token ou allowlist
+  shutdown-bot status               # consultar o status local
+  shutdown-bot logs                 # acompanhar os logs
+  shutdown-bot service restart      # reiniciar o servico
+  shutdown-bot config               # trocar token ou allowlist
 EOF

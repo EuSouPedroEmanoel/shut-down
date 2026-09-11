@@ -247,6 +247,7 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 async def _mostrar_status(
     context: ContextTypes.DEFAULT_TYPE, chat_id: int, user_id: int
 ) -> None:
+    log.info("/status consultado por id=%s", user_id)
     # collect() faz uma amostragem de CPU de 0,5s; fora da thread do event loop.
     relatorio = await asyncio.to_thread(status.collect)
     await mostrar_painel(context, chat_id, ui.tela_status(relatorio, user_id))
@@ -315,6 +316,7 @@ def _cancelar_jobs(context: ContextTypes.DEFAULT_TYPE) -> bool:
     """Remove os jobs pendentes. Devolve ``True`` se havia algum."""
     jobs = context.job_queue.get_jobs_by_name(JOB_NAME) if context.job_queue else ()
     for job in jobs:
+        log.info("job removido: nome=%s id=%s", JOB_NAME, getattr(job, "id", "desconhecido"))
         job.schedule_removal()
     return bool(jobs)
 
@@ -514,6 +516,12 @@ async def _executar_acao(context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = job.data.get("user_id", 0)
     _, gerundio, executar = ACOES[acao]
 
+    log.info(
+        "job iniciado: nome=%s id=%s ação=%s",
+        JOB_NAME,
+        getattr(job, "id", "desconhecido"),
+        acao,
+    )
     await _painel(context, job.chat_id, user_id, f"⚡ {gerundio} agora...")
     try:
         await asyncio.to_thread(executar)

@@ -1,0 +1,14 @@
+#compdef shutdown-bot
+
+_arguments '1:comando:(status service logs config poweroff reboot suspend lock)' \
+  '*:opção:->options'
+
+case $state in
+  options)
+    if [[ $words[2] == service ]]; then
+      _describe 'ação' '(status start stop restart)'
+    elif [[ $words[2] == poweroff || $words[2] == reboot || $words[2] == suspend || $words[2] == lock ]]; then
+      _message '--yes'
+    fi
+    ;;
+esac

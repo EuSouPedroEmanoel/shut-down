@@ -1,0 +1,7 @@
+complete -c shutdown-bot -f -n '__fish_use_subcommand' -a 'status' -d 'consultar o status local'
+complete -c shutdown-bot -f -n '__fish_use_subcommand' -a 'service' -d 'controlar o serviço'
+complete -c shutdown-bot -f -n '__fish_use_subcommand' -a 'logs' -d 'acompanhar os logs'
+complete -c shutdown-bot -f -n '__fish_use_subcommand' -a 'config' -d 'editar a configuração'
+complete -c shutdown-bot -f -n '__fish_use_subcommand' -a 'poweroff reboot suspend lock' -d 'ação de energia'
+complete -c shutdown-bot -f -n '__fish_seen_subcommand_from service' -a 'status start stop restart'
+complete -c shutdown-bot -l yes -f -n '__fish_seen_subcommand_from poweroff reboot suspend lock'
